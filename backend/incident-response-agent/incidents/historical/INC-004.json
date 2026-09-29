@@ -1,0 +1,28 @@
+{
+  "incident_id": "INC-004",
+  "incident_type": "privileged_access",
+  "date": "2026-05-06",
+  "summary": "Privileged operations account used from an unusual host to enumerate secrets and create a new service token.",
+  "affected_user": "svc.ops",
+  "evidence": [
+    "svc.ops used interactively from a workstation, but it normally runs only automated jobs",
+    "Secret enumeration and a new service token created",
+    "Account is used by the nightly backup and certificate-renewal jobs"
+  ],
+  "investigation": [
+    "Correlated with baseline: account had no interactive logins in 90 days",
+    "Confirmed with the platform team that the interactive use was not authorized"
+  ],
+  "actions_taken": [
+    "Per playbook default, the account was disabled",
+    "Nightly backup and certificate renewal failed overnight because they ran as this account",
+    "Analyst re-enabled the account after revoking sessions, removing the new token and rotating the account secret"
+  ],
+  "outcome": "Attacker access ended, but disabling the account caused a backup failure and an expired-certificate alert (about 9 hours of disruption).",
+  "analyst_feedback": "For service/ops accounts with dependent automation, disabling the account was unnecessarily disruptive. Session revocation plus secret rotation plus removing the attacker's token was enough. Check dependent services before disabling.",
+  "lessons_learned": [
+    "Before disabling an account, check what services and jobs depend on it",
+    "For privileged accounts with dependent automation prefer revoking sessions, removing attacker-created tokens and rotating the secret over disabling the account"
+  ],
+  "detection_gaps": ["No alert for interactive logon of accounts that are normally non-interactive"]
+}

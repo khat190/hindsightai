@@ -1,0 +1,29 @@
+{
+  "incident_id": "INC-002",
+  "incident_type": "phishing",
+  "date": "2026-03-29",
+  "summary": "Finance user submitted credentials on a fake document-sharing page; attacker created a hidden mailbox forwarding rule.",
+  "affected_user": "fin.a",
+  "evidence": [
+    "Phishing email from lookalike domain to 14 recipients; 3 clicked, 1 submitted credentials",
+    "Login to fin.a mailbox from a hosting-provider IP 12 minutes after submission",
+    "Inbox rule forwarding invoices to an external address"
+  ],
+  "investigation": [
+    "Extracted URLs and sender domain; both flagged malicious by threat intel",
+    "Reviewed authentication and mailbox activity for the 3 clickers; only one compromised"
+  ],
+  "actions_taken": [
+    "Blocked sender domain and phishing URL",
+    "Revoked sessions for the compromised user",
+    "Removed the forwarding rule",
+    "User notified by phone rather than email"
+  ],
+  "outcome": "Contained. No invoice data left after the rule was removed.",
+  "analyst_feedback": "Checking mailbox rules early mattered. Notifying the user by phone avoided tipping off the attacker.",
+  "lessons_learned": [
+    "For credential-phishing, check for mailbox rules/forwarding as persistence",
+    "Notify affected users out-of-band, not by email"
+  ],
+  "detection_gaps": ["No alert on new external forwarding rules"]
+}

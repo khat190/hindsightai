@@ -1,0 +1,37 @@
+{
+  "incident_id": "CUR-002",
+  "incident_type": "phishing",
+  "reported_at": "2026-09-28T06:30:00Z",
+  "source": "user report",
+  "summary": "Employee reported a fake shared-document email and later noticed an unfamiliar inbox rule.",
+  "affected_user": "maria.d",
+  "hosts": [],
+  "indicators": ["docs-share-secure.example-login.net"],
+  "telemetry": {
+    "user_profiles": {
+      "maria.d": {"role": "accounts-payable", "privileged": false, "usual_locations": ["Hyderabad, IN"], "dependent_services": []}
+    },
+    "authentication_history": {
+      "maria.d": [
+        {"time": "2026-09-28T05:50:00Z", "result": "success", "ip": "10.20.7.44", "geo": "Hyderabad, IN", "device": "corp-laptop", "mfa": "push_approved", "flags": []},
+        {"time": "2026-09-28T06:02:00Z", "result": "success", "ip": "45.83.64.9", "geo": "Amsterdam, NL", "device": "unknown-browser", "mfa": "none_required", "flags": ["new_geo"]}
+      ]
+    },
+    "user_activity": {
+      "maria.d": [
+        {"time": "2026-09-28T06:05:00Z", "action": "create_inbox_rule", "resource": "forward all mail with 'invoice' to external address", "source_ip": "45.83.64.9", "flags": ["mailbox_rule"]}
+      ]
+    },
+    "active_sessions": {"maria.d": [{"session_id": "sess-aa10", "ip": "45.83.64.9", "started": "2026-09-28T06:02:00Z"}]},
+    "unauthorized_access": {"maria.d": ["mailbox_rule:forward-invoice-external"]},
+    "indicators": {
+      "docs-share-secure.example-login.net": {"reputation": "malicious", "tags": ["phishing-kit"], "first_seen": "2026-09-27"},
+      "45.83.64.9": {"reputation": "suspicious", "tags": ["hosting-provider"], "first_seen": "2026-09-25"}
+    },
+    "logs": [
+      {"time": "2026-09-28T05:58:00Z", "source": "web-proxy", "message": "POST maria.d docs-share-secure.example-login.net/login credentials-form"},
+      {"time": "2026-09-28T06:02:00Z", "source": "idp", "message": "login success user=maria.d ip=45.83.64.9 geo=Amsterdam NL"},
+      {"time": "2026-09-28T06:05:00Z", "source": "mail-audit", "message": "create_inbox_rule user=maria.d forward=external"}
+    ]
+  }
+}

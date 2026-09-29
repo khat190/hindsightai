@@ -1,0 +1,44 @@
+{
+  "incident_id": "CUR-001",
+  "incident_type": "suspicious_login",
+  "reported_at": "2026-09-28T04:12:00Z",
+  "source": "identity-provider anomaly alert",
+  "summary": "Suspicious login on a platform administrator account from an unfamiliar country, followed by unusual privileged activity.",
+  "affected_user": "raj.m",
+  "hosts": [],
+  "indicators": ["185.220.101.47"],
+  "telemetry": {
+    "user_profiles": {
+      "raj.m": {"role": "platform-admin", "privileged": true, "usual_locations": ["Hyderabad, IN"], "dependent_services": ["nightly-backup", "cert-renewal-job"]}
+    },
+    "authentication_history": {
+      "raj.m": [
+        {"time": "2026-09-27T09:02:00Z", "result": "success", "ip": "10.20.4.18", "geo": "Hyderabad, IN", "device": "corp-laptop", "mfa": "push_approved", "flags": []},
+        {"time": "2026-09-28T03:41:00Z", "result": "success", "ip": "185.220.101.47", "geo": "Frankfurt, DE", "device": "unknown-browser", "mfa": "push_approved_after_7_prompts", "flags": ["new_geo", "mfa_prompt_spam"]}
+      ]
+    },
+    "user_activity": {
+      "raj.m": [
+        {"time": "2026-09-28T03:44:00Z", "action": "create_api_key", "resource": "platform-admin api key ak_live_7f31", "source_ip": "185.220.101.47", "flags": ["new_credential_created"]},
+        {"time": "2026-09-28T03:47:00Z", "action": "update_role_binding", "resource": "prod-cluster: raj.m -> cluster-admin", "source_ip": "185.220.101.47", "flags": ["privileged_change"]},
+        {"time": "2026-09-28T03:52:00Z", "action": "list_secrets", "resource": "prod-cluster/secrets", "source_ip": "185.220.101.47", "flags": []}
+      ]
+    },
+    "active_sessions": {
+      "raj.m": [{"session_id": "sess-91c2", "ip": "185.220.101.47", "started": "2026-09-28T03:41:00Z"}]
+    },
+    "unauthorized_access": {
+      "raj.m": ["api_key:ak_live_7f31", "role_binding:prod-cluster/cluster-admin"]
+    },
+    "indicators": {
+      "185.220.101.47": {"reputation": "suspicious", "tags": ["anonymizing-proxy"], "first_seen": "2026-09-20"}
+    },
+    "logs": [
+      {"time": "2026-09-28T03:41:00Z", "source": "idp", "message": "login success user=raj.m ip=185.220.101.47 geo=Frankfurt DE mfa=push_after_7_prompts"},
+      {"time": "2026-09-28T03:44:00Z", "source": "platform-audit", "message": "create_api_key user=raj.m key=ak_live_7f31 ip=185.220.101.47"},
+      {"time": "2026-09-28T03:47:00Z", "source": "platform-audit", "message": "update_role_binding user=raj.m scope=prod-cluster role=cluster-admin"},
+      {"time": "2026-09-28T03:52:00Z", "source": "platform-audit", "message": "list_secrets user=raj.m scope=prod-cluster"},
+      {"time": "2026-09-28T02:10:00Z", "source": "change-mgmt", "message": "no approved change window for raj.m on 2026-09-28"}
+    ]
+  }
+}

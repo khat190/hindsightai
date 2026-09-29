@@ -1,0 +1,34 @@
+{
+  "incident_id": "INC-001",
+  "incident_type": "suspicious_login",
+  "date": "2026-03-11",
+  "summary": "Privileged SRE admin login from a previously unseen country followed within minutes by creation of a new API key and a role-binding change.",
+  "affected_user": "dev.s",
+  "evidence": [
+    "Login from unfamiliar ASN in a new country 6 minutes after a normal login from the office",
+    "MFA approved after 9 push prompts",
+    "New long-lived API key created 4 minutes after login",
+    "Role binding changed to add admin scope"
+  ],
+  "investigation": [
+    "Compared login geo/device with 90-day baseline: no prior match",
+    "Reviewed post-login activity: privilege change plus new API key",
+    "Checked source IP: listed as anonymizing proxy (suspicious)"
+  ],
+  "actions_taken": [
+    "Analyst ran evidence collection first: snapshot of active sessions, the new API key metadata and the role-binding audit records",
+    "Then revoked all active sessions for the user",
+    "Removed the attacker-created API key and reverted the role binding",
+    "Ticket created"
+  ],
+  "outcome": "Compromise contained within 40 minutes. No further attacker activity after revocation.",
+  "analyst_feedback": "Capturing the session list and new key metadata BEFORE revoking sessions preserved the investigation context; once sessions are revoked that information is hard to reconstruct. It also let us find the role-binding change we would otherwise have missed.",
+  "lessons_learned": [
+    "Collect evidence (sessions, new credentials, audit records) before revoking sessions on a privileged identity",
+    "After a suspicious privileged login, always check for newly created credentials and permission changes"
+  ],
+  "detection_gaps": [
+    "No alert for MFA push spam followed by approval",
+    "No alert for API key creation within 10 minutes of a login from a new country"
+  ]
+}

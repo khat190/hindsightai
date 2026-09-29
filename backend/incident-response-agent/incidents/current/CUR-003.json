@@ -1,0 +1,35 @@
+{
+  "incident_id": "CUR-003",
+  "incident_type": "suspicious_login",
+  "reported_at": "2026-09-28T09:20:00Z",
+  "source": "identity-provider anomaly alert",
+  "summary": "Suspicious login on an on-call SRE account from a new country, followed by unusual privileged activity (new API token and secrets listing).",
+  "affected_user": "anita.p",
+  "hosts": [],
+  "indicators": ["103.75.11.20"],
+  "telemetry": {
+    "user_profiles": {
+      "anita.p": {"role": "sre-oncall", "privileged": true, "usual_locations": ["Hyderabad, IN"], "dependent_services": ["log-shipper"]}
+    },
+    "authentication_history": {
+      "anita.p": [
+        {"time": "2026-09-28T08:55:00Z", "result": "success", "ip": "10.20.4.33", "geo": "Hyderabad, IN", "device": "corp-laptop", "mfa": "push_approved", "flags": []},
+        {"time": "2026-09-28T09:05:00Z", "result": "success", "ip": "103.75.11.20", "geo": "Singapore, SG", "device": "unknown-browser", "mfa": "push_approved_after_5_prompts", "flags": ["new_geo", "mfa_prompt_spam"]}
+      ]
+    },
+    "user_activity": {
+      "anita.p": [
+        {"time": "2026-09-28T09:08:00Z", "action": "create_api_token", "resource": "oncall api token tok_live_c2d9", "source_ip": "103.75.11.20", "flags": ["new_credential_created"]},
+        {"time": "2026-09-28T09:11:00Z", "action": "list_secrets", "resource": "prod-cluster/secrets", "source_ip": "103.75.11.20", "flags": []}
+      ]
+    },
+    "active_sessions": {"anita.p": [{"session_id": "sess-77be", "ip": "103.75.11.20", "started": "2026-09-28T09:05:00Z"}]},
+    "unauthorized_access": {"anita.p": ["api_token:tok_live_c2d9"]},
+    "indicators": {"103.75.11.20": {"reputation": "suspicious", "tags": ["vpn-provider"], "first_seen": "2026-09-22"}},
+    "logs": [
+      {"time": "2026-09-28T09:05:00Z", "source": "idp", "message": "login success user=anita.p ip=103.75.11.20 geo=Singapore SG mfa=push_after_5_prompts"},
+      {"time": "2026-09-28T09:08:00Z", "source": "platform-audit", "message": "create_api_token user=anita.p token=tok_live_c2d9"},
+      {"time": "2026-09-28T09:11:00Z", "source": "platform-audit", "message": "list_secrets user=anita.p scope=prod-cluster"}
+    ]
+  }
+}

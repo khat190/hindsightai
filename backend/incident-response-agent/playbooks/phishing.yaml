@@ -1,0 +1,29 @@
+name: Phishing Response
+incident_type: phishing
+version: "1.0"
+status: approved
+description: "Reported or detected phishing email/link/attachment, possibly leading to credential entry or malware."
+source_notes:
+  - "CISA playbook: initial access via phishing [T1566]; share indicators; avoid tipping off attacker (notify users out-of-band)."
+severity:
+  P1: "Credentials or malware delivered on privileged/multiple users with attacker activity."
+  P2: "Credential submitted or payload executed on a single user."
+  P3: "Delivered but no interaction confirmed."
+  P4: "Blocked or reported with no interaction."
+steps:
+  - {id: PH1, name: Triage message, objective: "Confirm phishing; identify recipients and indicators.", actions: ["Extract sender, URLs, attachments"], evidence: ["message headers"], requires_approval: false, tools: [search_logs, check_indicator]}
+  - {id: PH2, name: Determine interaction, objective: "Who clicked or submitted credentials?", actions: ["Review proxy/auth logs for the recipients"], evidence: ["click logs", "auth history"], requires_approval: false, tools: [get_authentication_history, get_user_activity]}
+  - {id: PH3, name: Preserve evidence, objective: "Retain message copies and logs before purge.", actions: ["Preserve evidence"], evidence: ["snapshot"], requires_approval: true, tools: [preserve_evidence]}
+  - {id: PH4, name: Block indicators, objective: "Block malicious sender/domain/URL.", actions: ["Block indicator"], evidence: ["verdicts"], requires_approval: true, tools: [block_indicator]}
+  - {id: PH5, name: Contain affected users, objective: "If credentials submitted: revoke sessions and reset credentials.", actions: ["Revoke sessions", "Remove attacker mailbox rules/access"], evidence: ["rationale"], requires_approval: true, tools: [revoke_sessions, remove_unauthorized_access]}
+  - {id: PH6, name: Endpoint check, objective: "If a payload was opened, check the endpoint.", actions: ["Get endpoint activity", "Isolate if compromised"], evidence: ["endpoint activity"], requires_approval: true, tools: [get_endpoint_activity, isolate_endpoint]}
+  - {id: PH7, name: Recover, objective: "Reset credentials, notify users out-of-band.", actions: ["Reset password/MFA"], evidence: ["checklist"], requires_approval: true}
+  - {id: PH8, name: Document and learn, objective: "Ticket, lessons, detection improvements.", actions: ["Create ticket"], evidence: ["report"], requires_approval: true, tools: [create_ticket]}
+containment:
+  strategy: "Block indicators; revoke sessions only for users who interacted."
+  options:
+    - {tool: block_indicator, when: "Malicious sender/domain/URL confirmed", impact: "Low"}
+    - {tool: revoke_sessions, when: "Credential submission suspected", impact: "Low"}
+eradication: ["Purge message from mailboxes", "Remove mailbox rules/forwarding"]
+recovery: ["Credential reset", "User notification out-of-band"]
+post_incident: ["Detection gap: URL rewriting/sandboxing", "User awareness"]

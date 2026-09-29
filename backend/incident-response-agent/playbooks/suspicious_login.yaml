@@ -1,0 +1,30 @@
+name: Suspicious Login Response
+incident_type: suspicious_login
+version: "1.0"
+status: approved
+description: "Login from new location/device/ASN, impossible travel, or MFA anomalies, possibly followed by unusual activity."
+source_notes:
+  - "AWS Identity Center playbook: SSO logins from unusual geography/new device; new MFA registrations."
+  - "AWS STS playbook: impossible travel on sessions; scoping across accounts."
+severity:
+  P1: "Login confirmed malicious AND unauthorized privileged changes or data access."
+  P2: "Suspicious login on a privileged identity with unusual privileged activity, or confirmed unauthorized login with unclear scope."
+  P3: "Suspicious login with no post-login anomalies."
+  P4: "Benign anomaly (travel, VPN) confirmed by user."
+steps:
+  - {id: SL1, name: Validate login, objective: "Is the login legitimate (travel, VPN, new device)?", actions: ["Compare with baseline geo/device", "Contact user out-of-band"], evidence: ["authentication history"], requires_approval: false, tools: [get_authentication_history]}
+  - {id: SL2, name: Check post-login activity, objective: "Look for privileged or credential-creating activity after the login.", actions: ["Review user activity after login", "Flag privilege changes, new keys/tokens, mailbox rules"], evidence: ["user activity"], requires_approval: false, tools: [get_user_activity, search_logs]}
+  - {id: SL3, name: Check indicators, objective: "Reputation of source IP/ASN.", actions: ["Check indicator"], evidence: ["indicator verdict"], requires_approval: false, tools: [check_indicator]}
+  - {id: SL4, name: Preserve evidence, objective: "Snapshot sessions and logs before containment.", actions: ["Preserve evidence for the user"], evidence: ["evidence snapshot"], requires_approval: true, tools: [preserve_evidence]}
+  - {id: SL5, name: Contain, objective: "Cut attacker access. Playbook default for P1/P2 privileged identity: revoke sessions AND disable the account.", actions: ["Revoke sessions", "Disable account (default for P1/P2 privileged identities)"], evidence: ["containment rationale"], requires_approval: true, tools: [revoke_sessions, disable_account]}
+  - {id: SL6, name: Remove persistence, objective: "Remove attacker-created credentials/grants.", actions: ["Remove unauthorized access"], evidence: ["removed items"], requires_approval: true, tools: [remove_unauthorized_access]}
+  - {id: SL7, name: Verify and recover, objective: "Confirm no further activity; restore user with MFA reset.", actions: ["Re-check activity", "Reset credentials and MFA"], evidence: ["post-containment logs"], requires_approval: false}
+  - {id: SL8, name: Document and learn, objective: "Ticket, timeline, lessons, detection gaps.", actions: ["Create ticket", "Record lessons"], evidence: ["report"], requires_approval: true, tools: [create_ticket]}
+containment:
+  strategy: "Revoke sessions and disable privileged accounts at P1/P2 (policy default), after evidence collection."
+  options:
+    - {tool: revoke_sessions, when: "Always for confirmed suspicious sessions", impact: "Low"}
+    - {tool: disable_account, when: "P1/P2 privileged identity (policy default)", impact: "Breaks automation and services that run as the account"}
+eradication: ["Remove unauthorized credentials, keys, tokens", "Reset password and MFA"]
+recovery: ["Re-enable user after credential reset", "Heightened monitoring for 7 days"]
+post_incident: ["Detection gap review: geo/ASN anomaly alerting", "Update baseline"]

@@ -1,0 +1,31 @@
+name: Account / Credential Compromise Response
+incident_type: account_compromise
+version: "1.0"
+status: approved
+description: "Confirmed or likely compromise of a user, admin or service account (phishing-derived, stolen credentials, privileged misuse)."
+source_notes:
+  - "AWS Identity Center playbook: persistence via new users, permission sets and assignments survives credential rotation; check for it before recovery."
+  - "AWS STS playbook: revoke sessions after evidence capture; role/credential chaining widens blast radius."
+  - "CISA playbook: rotate secrets, revoke privileged access, monitor for attacker reaction to containment."
+severity:
+  P1: "Privileged account compromised with confirmed unauthorized changes or data access."
+  P2: "Account compromise confirmed; scope unclear."
+  P3: "Suspected compromise, no confirmed abuse."
+  P4: "Weak credential hygiene finding."
+steps:
+  - {id: AC1, name: Confirm compromise, objective: "Confirm abnormal use of the credential.", actions: ["Review authentication history and activity", "Deconflict with authorized admin work"], evidence: ["auth history", "activity"], requires_approval: false, tools: [get_authentication_history, get_user_activity]}
+  - {id: AC2, name: Scope, objective: "Identify systems, data, privileges and dependent services tied to the account.", actions: ["List privileges", "List service dependencies", "Look for other accounts touched"], evidence: ["profile", "activity"], requires_approval: false, tools: [get_user_activity, search_logs]}
+  - {id: AC3, name: Preserve evidence, objective: "Snapshot sessions, tokens, logs before containment.", actions: ["Preserve evidence"], evidence: ["snapshot"], requires_approval: true, tools: [preserve_evidence]}
+  - {id: AC4, name: Contain, objective: "Stop attacker use. Playbook default: revoke sessions and disable the account.", actions: ["Revoke sessions", "Disable account", "Block attacker indicators"], evidence: ["rationale"], requires_approval: true, tools: [revoke_sessions, disable_account, block_indicator]}
+  - {id: AC5, name: Eradicate, objective: "Remove attacker-created access and rotate secrets.", actions: ["Remove unauthorized access", "Rotate credentials"], evidence: ["removed items"], requires_approval: true, tools: [remove_unauthorized_access]}
+  - {id: AC6, name: Verify, objective: "Confirm attacker no longer has access.", actions: ["Re-query sessions and activity"], evidence: ["logs"], requires_approval: false}
+  - {id: AC7, name: Recover, objective: "Restore account with MFA; monitor.", actions: ["Reset password/MFA", "Re-enable dependent services"], evidence: ["checklist"], requires_approval: true}
+  - {id: AC8, name: Document and learn, objective: "Ticket, timeline, lessons, detection gaps.", actions: ["Create ticket"], evidence: ["report"], requires_approval: true, tools: [create_ticket]}
+containment:
+  strategy: "Revoke sessions and disable the account (policy default), after evidence collection."
+  options:
+    - {tool: revoke_sessions, when: "Live attacker sessions", impact: "Low"}
+    - {tool: disable_account, when: "Compromise confirmed (policy default)", impact: "Stops all use of the account, including automation"}
+eradication: ["Remove attacker-created credentials/grants", "Rotate secrets", "Reset MFA"]
+recovery: ["Re-enable account with MFA", "Monitor 14 days"]
+post_incident: ["Hotwash", "Detection gaps", "Review service accounts with human logins"]

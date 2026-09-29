@@ -1,0 +1,43 @@
+name: Generic Incident Response
+incident_type: generic
+version: "1.0"
+status: approved
+description: >
+  Organization-approved baseline procedure for any security incident. Type-specific
+  playbooks refine it. This is POLICY: historical experience may inform how a step is
+  executed but does not replace it.
+source_notes:
+  - "CISA Federal Government IR Playbook (Nov 2021): lifecycle, evidence logging, scope refinement, containment considerations, hotwash."
+  - "AWS STS Token Abuse playbook: preserve evidence before revoking access; determine blast radius across accounts; detection-gap analysis."
+  - "AWS Identity Center playbook: watch for persistence (new users/permission changes) that survives credential rotation."
+severity:
+  P1: "Confirmed compromise of privileged access or sensitive data with active attacker presence or broad blast radius."
+  P2: "Confirmed or highly likely unauthorized activity; scope unclear or privileged identity involved."
+  P3: "Anomalous activity with no confirmed malicious action yet."
+  P4: "Policy violation or misconfiguration with no evidence of exploitation."
+steps:
+  - {id: S01, name: Detect, objective: "Receive and record the alert/report as an incident.", actions: ["Record source, time, affected entity", "Assign incident ID and coordinator"], evidence: ["alert payload"], requires_approval: false}
+  - {id: S02, name: Validate, objective: "Rule out authorized or benign activity.", actions: ["Deconflict with change windows / admin work", "Confirm with the user or owner through an out-of-band channel"], evidence: ["change records", "user confirmation"], requires_approval: false}
+  - {id: S03, name: Determine scope, objective: "Identify affected identities, hosts, data and privilege level.", actions: ["List related accounts/hosts", "Check for lateral movement", "Note dependent services"], evidence: ["user activity", "authentication history", "endpoint activity"], requires_approval: false, tools: [get_user_activity, get_authentication_history, get_endpoint_activity]}
+  - {id: S04, name: Collect evidence, objective: "Preserve volatile and log evidence BEFORE any destructive containment.", actions: ["Snapshot sessions, tokens, credentials and relevant logs", "Log how, when and by whom evidence was acquired"], evidence: ["evidence snapshot ID"], requires_approval: true, tools: [preserve_evidence, search_logs]}
+  - {id: S05, name: Investigate, objective: "Build a timeline, identify attack vector, persistence and impact.", actions: ["Correlate events into a UTC timeline", "Check indicators against threat intel", "Look for persistence (new credentials, rules, access grants)"], evidence: ["timeline", "indicator verdicts"], requires_approval: false, tools: [search_logs, check_indicator]}
+  - {id: S06, name: Assess severity, objective: "Assign P1-P4 with a stated confidence.", actions: ["Apply severity table", "Escalate P1/P2 to incident lead"], evidence: ["scope summary"], requires_approval: false}
+  - {id: S07, name: Decide containment, objective: "Choose the least disruptive action that stops the attacker.", actions: ["Weigh service disruption, evidence impact, duration and effectiveness", "Prefer targeted actions (session revocation, indicator block) before broad ones (account disable, isolation) when evidence supports it", "Check for dependent services/automation"], evidence: ["containment rationale"], requires_approval: false}
+  - {id: S08, name: Human approval, objective: "Analyst reviews and approves or rejects each consequential action.", actions: ["Present action, reason, evidence, risk", "Record decision and comment"], evidence: ["approval record"], requires_approval: true}
+  - {id: S09, name: Execute approved action, objective: "Perform only approved actions.", actions: ["Run tool", "Record result"], evidence: ["tool output"], requires_approval: true, tools: [revoke_sessions, disable_account, isolate_endpoint, block_indicator, remove_unauthorized_access]}
+  - {id: S10, name: Verify containment, objective: "Confirm no new attacker activity after containment.", actions: ["Re-query activity and sessions", "If new signs of compromise appear return to S03 to re-scope"], evidence: ["post-containment activity"], requires_approval: false}
+  - {id: S11, name: Eradicate persistence, objective: "Remove attacker footholds; attackers often keep more than one.", actions: ["Remove unauthorized credentials/access/rules", "Rotate affected secrets"], evidence: ["removed artifacts"], requires_approval: true, tools: [remove_unauthorized_access]}
+  - {id: S12, name: Recover, objective: "Restore normal operation and monitor for re-entry.", actions: ["Re-enable users/services safely", "Enforce MFA", "Monitor closely"], evidence: ["recovery checklist"], requires_approval: true}
+  - {id: S13, name: Document outcome, objective: "Record timeline, actions, outcome and open items.", actions: ["Create ticket/case", "Finalize timeline"], evidence: ["incident report"], requires_approval: true, tools: [create_ticket]}
+  - {id: S14, name: Learn, objective: "Capture lessons learned and detection gaps; update procedures.", actions: ["Run hotwash", "Record what worked/failed", "Propose detection and playbook improvements"], evidence: ["lessons learned"], requires_approval: false}
+containment:
+  strategy: "Least disruptive effective action, after evidence collection."
+  options:
+    - {tool: revoke_sessions, when: "Attacker holds live sessions/tokens", impact: "User must re-authenticate; low disruption"}
+    - {tool: disable_account, when: "Credential compromise confirmed and no critical dependencies", impact: "User and any automation using the account stop working"}
+    - {tool: isolate_endpoint, when: "Host compromise confirmed", impact: "Host offline; volatile evidence lost if not captured first"}
+    - {tool: block_indicator, when: "Malicious IP/domain/hash confirmed", impact: "Possible false-positive blocking"}
+    - {tool: remove_unauthorized_access, when: "Attacker-created credentials or grants found", impact: "Low if the access is confirmed unauthorized"}
+eradication: ["Remove persistence", "Rotate compromised secrets", "Patch or fix the enabling condition"]
+recovery: ["Restore services", "Enforce MFA", "Monitor for re-entry for an agreed period"]
+post_incident: ["Timeline reconstruction", "Hotwash / lessons learned", "Detection gap analysis", "Playbook update proposals"]

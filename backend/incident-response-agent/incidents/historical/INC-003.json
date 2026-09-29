@@ -1,0 +1,29 @@
+{
+  "incident_id": "INC-003",
+  "incident_type": "malware",
+  "date": "2026-04-15",
+  "summary": "Endpoint beaconing to a rare external domain after a user opened a macro-enabled attachment.",
+  "affected_user": "hr.k",
+  "affected_host": "WKS-HR-014",
+  "evidence": [
+    "Office process spawned a scripting interpreter",
+    "Periodic outbound connections every 60s to a newly registered domain",
+    "Scheduled task created for persistence"
+  ],
+  "investigation": [
+    "Endpoint activity showed scheduled task and encoded script execution",
+    "Domain reputation: malicious"
+  ],
+  "actions_taken": [
+    "Endpoint isolated immediately",
+    "Domain blocked",
+    "Host re-imaged"
+  ],
+  "outcome": "Malware removed, but volatile memory artifacts were lost, so the payload family and any credential theft could not be confirmed.",
+  "analyst_feedback": "Isolation was right but we should have captured a memory and triage snapshot first, or at least checked whether the host held cached credentials.",
+  "lessons_learned": [
+    "Capture memory/triage data before isolating or re-imaging a compromised endpoint",
+    "Assume credentials cached on a compromised host may be stolen and review that user's logins"
+  ],
+  "detection_gaps": ["Macro-enabled attachments from external senders were not sandboxed"]
+}

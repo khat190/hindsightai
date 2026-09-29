@@ -1,0 +1,29 @@
+{
+  "incident_id": "INC-005",
+  "incident_type": "data_exfiltration",
+  "date": "2026-06-02",
+  "summary": "Large upload of customer export files from an analyst's laptop to a personal cloud storage domain.",
+  "affected_user": "data.r",
+  "affected_host": "WKS-DATA-031",
+  "evidence": [
+    "4.2 GB uploaded to a personal cloud storage domain in 40 minutes",
+    "Files matched customer-export naming pattern",
+    "User was on notice period per HR"
+  ],
+  "investigation": [
+    "Reviewed proxy logs and file access logs",
+    "Confirmed with data owner that the upload was not approved"
+  ],
+  "actions_taken": [
+    "Destination domain blocked",
+    "Sessions revoked",
+    "Ticket escalated to legal and HR"
+  ],
+  "outcome": "Further uploads stopped. Data owner assessed exposure; legal notified.",
+  "analyst_feedback": "Good to involve legal and HR early. Exfiltration was found by chance in a proxy review.",
+  "lessons_learned": [
+    "Escalate suspected insider exfiltration to legal/HR early",
+    "Block the destination and preserve proxy and file-access logs first"
+  ],
+  "detection_gaps": ["No DLP alert on large uploads to personal cloud storage"]
+}
